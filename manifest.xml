@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" 
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" 
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" 
            xsi:type="TaskPaneApp">
   <Id>99887766-5544-3322-1100-aabbccddeeff</Id>
   <Version>2.0.0.0</Version>
@@ -14,7 +14,9 @@
   <AppDomains>
     <AppDomain>https://generativelanguage.googleapis.com</AppDomain>
   </AppDomains>
-  <Hosts><Host Name="Workbook"/></Hosts>
+  <Hosts>
+    <Host Name="Workbook"/>
+  </Hosts>
   <DefaultSettings>
     <SourceLocation DefaultValue="https://D-Divyansh.github.io/gemini-excel-addin/taskpane.html"/>
   </DefaultSettings>
