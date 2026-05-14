@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Divy.AI</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --border2: #3a3a50;
+      --text: #f0f0ff;
+      --muted: #7070a0;
+      --accent: #7c6aff;
+      --accent2: #ff6ab0;
+      --accent3: #6affcc;
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
+    body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); font-size: 13px; height: 100vh; overflow-y: auto; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    .header { padding: 16px 16px 12px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #13131e 0%, var(--bg) 100%); position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .logo-mark { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: white; box-shadow: 0 0 20px rgba(124,106,255,0.4); flex-shrink: 0; }
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-left: 42px; }
+
+    .body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+    .kpi-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 10px; text-align: center; }
+    .kpi-val { font-size: 18px; font-weight: 800; margin-bottom: 2px; }
+    .kpi-val.v1 { color: var(--accent); }
+    .kpi-val.v2 { color: var(--accent2); }
+    .kpi-val.v3 { color: var(--accent3); }
+    .kpi-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+    .api-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .api-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; user-select: none; }
+    .api-toggle:hover { background: var(--surface2); }
+    .api-toggle-left { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: background .3s; }
+    .status-dot.live { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
+    .api-body { padding: 0 14px 12px; display: none; }
+    .api-body.open { display: block; }
+    .api-row { display: flex; gap: 6px; }
+    .api-input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px; font-family: 'JetBrains Mono', monospace; background: var(--surface2); color: var(--text); outline: none; }
+    .api-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(124,106,255,0.15); }
+    .btn-save { padding: 8px 14px; border-radius: var(--radius); font-size: 11px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; transition: opacity .15s, transform .1s; }
+    .btn-save:hover { opacity: .88; transform: translateY(-1px); }
+
+    .prompt-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; position: relative; }
+    .prompt-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3)); }
+    .prompt-label { padding: 12px 14px 8px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; display: flex; align-items: center; gap: 6px; }
+    .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+    .prompt-textarea { width: 100%; padding: 0 14px 10px; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; line-height: 1.6; resize: none; min-height: 90px; }
+    .prompt-textarea::placeholder { color: var(--muted); }
+    .prompt-footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid var(--border); background: var(--surface2); }
+    .prompt-hint { font-size: 10px; color: var(--muted); }
+    .prompt-hint kbd { background: var(--border2); padding: 1px 5px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 9px; }
+    .run-btn { display: flex; align-items: center; gap: 7px; padding: 8px 18px; border-radius: var(--radius); font-size: 12px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; box-shadow: 0 4px 20px rgba(124,106,255,0.3); transition: all .2s; }
+    .run-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(124,106,255,0.45); }
+    .run-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .chips-label { font-size: 10px; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+    .chips { display: flex; flex-direction: column; gap: 5px; }
+    .chip { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--muted); font-size: 11px; font-family: 'Syne', sans-serif; text-align: left; line-height: 1.5; transition: all .15s; }
+    .chip:hover { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+    .chip strong { color: var(--accent2); font-weight: 600; display: block; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .04em; }
+
+    .log-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .log-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+    .log-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .log-clear { font-size: 10px; color: var(--muted); cursor: pointer; background: none; border: none; font-family: 'Syne', sans-serif; }
+    .log-clear:hover { color: var(--accent2); }
+    .log-body { max-height: 200px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .log-entry { padding: 8px 10px; border-radius: 8px; font-size: 11px; line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+    .log-entry.thinking { background: rgba(124,106,255,0.08); color: var(--accent); border: 1px solid rgba(124,106,255,0.2); }
+    .log-entry.success { background: rgba(106,255,204,0.07); color: var(--accent3); border: 1px solid rgba(106,255,204,0.15); }
+    .log-entry.error { background: rgba(255,80,80,0.08); color: #ff7070; border: 1px solid rgba(255,80,80,0.2); }
+    .log-entry.info { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    .log-icon { flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+    .spin { width: 12px; height: 12px; border: 2px solid rgba(124,106,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface2); color: var(--text); border: 1px solid var(--border2); padding: 9px 18px; border-radius: 20px; font-size: 12px; z-index: 999; opacity: 0; transition: all .25s; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">D</div>
+    <div class="logo-text">Divy<span>.AI</span></div>
+  </div>
+  <div class="logo-sub">Natural language Excel automation</div>
+</div>
+
+<div class="body">
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-val v1" id="kpi-tasks">0</div><div class="kpi-label">Tasks Done</div></div>
+    <div class="kpi"><div class="kpi-val v2" id="kpi-rows">—</div><div class="kpi-label">Rows</div></div>
+    <div class="kpi"><div class="kpi-val v3" id="kpi-cols">—</div><div class="kpi-label">Columns</div></div>
+  </div>
+
+  <div class="api-section">
+    <div class="api-toggle" onclick="toggleApi()">
+      <div class="api-toggle-left">
+        <span class="status-dot" id="keyDot"></span>
+        <span id="keyLabel">Gemini API Key — click to set</span>
+      </div>
+      <span id="apiArrow" style="color:var(--muted);font-size:10px">▼</span>
+    </div>
+    <div class="api-body" id="apiBody">
+      <div class="api-row">
+        <input class="api-input" type="password" id="apiKey" placeholder="AIza... apni Gemini API key daalen"/>
+        <button class="btn-save" onclick="saveKey()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label"><span class="pulse"></span>Divy ko batao kya karna hai</div>
+    <textarea class="prompt-textarea" id="promptInput" rows="4"
+      placeholder="e.g. Selected data se duplicates hatao, conditional formatting apply karo aur KPI ke saath interactive chart banao..."></textarea>
+    <div class="prompt-footer">
+      <div class="prompt-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</div>
+      <button class="run-btn" id="runBtn" onclick="runDivy()">Run Divy →</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="chips-label">Example prompts — click to use</div>
+    <div class="chips">
+      <button class="chip" onclick="usePrompt('Selected data se duplicate rows hatao, phir numeric cells ko green-yellow-red 3-color scale se conditional formatting do aur ek clustered bar chart banao')">
+        <strong>⭐ Duplicate + Format + Chart</strong>
+        Duplicates hatao → Color scale → Bar chart banao
+      </button>
+      <button class="chip" onclick="usePrompt('Selected range mein saari empty cells ko yellow background do aur sheet ke A1 cell mein total empty count likhdo')">
+        <strong>🔍 Empty Cell Audit</strong>
+        Empty cells dhundo, highlight karo, count likho
+      </button>
+      <button class="chip" onclick="usePrompt('Is sheet ke used range ka data sort karo column A se ascending order mein, top 5 rows bold aur light blue karo')">
+        <strong>📊 Sort + Highlight</strong>
+        Sort karo aur top rows highlight karo
+      </button>
+      <button class="chip" onclick="usePrompt('Selected data se ek pie chart banao titled Sales Distribution aur ek line chart banao titled Trend Analysis, dono adjacent cells mein add karo')">
+        <strong>📈 Multiple Charts</strong>
+        Pie chart + Line chart dono banao
+      </button>
+      <button class="chip" onclick="usePrompt('Sheet ke used range ka summary banao — row count, column count, numeric columns ka sum/average/max/min calculate karo aur ek naye sheet mein Summary Table banao')">
+        <strong>📋 Full Summary Report</strong>
+        Stats nikalo aur naye sheet mein report banao
+      </button>
+    </div>
+  </div>
+
+  <div class="log-card">
+    <div class="log-header">
+      <span class="log-title">⚡ Activity Log</span>
+      <button class="log-clear" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="log-body" id="logBody">
+      <div class="log-entry info">
+        <span class="log-icon">👋</span>
+        <span>Divy.AI ready hai! API key daalen aur apna kaam prompt karo.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let geminiKey = '';
+let tasksDone = 0;
+let apiOpen = false;
+
+Office.onReady(function(info) {
+  if (info.host === Office.HostType.Excel) {
+    const saved = localStorage.getItem('divy_gemini_key');
+    if (saved) { geminiKey = saved; document.getElementById('apiKey').value = saved; setKeyLive(true); }
+    updateKPI();
+  }
+});
+
+function toggleApi() {
+  apiOpen = !apiOpen;
+  document.getElementById('apiBody').classList.toggle('open', apiOpen);
+  document.getElementById('apiArrow').textContent = apiOpen ? '▲' : '▼';
+}
+
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  if (!v) { showToast('API key daalen!'); return; }
+  geminiKey = v;
+  localStorage.setItem('divy_gemini_key', v);
+  setKeyLive(true);
+  document.getElementById('apiBody').classList.remove('open');
+  apiOpen = false;
+  document.getElementById('apiArrow').textContent = '▼';
+  showToast('API key save ho gayi ✓');
+}
+
+function setKeyLive(ok) {
+  document.getElementById('keyDot').className = 'status-dot' + (ok ? ' live' : '');
+  document.getElementById('keyLabel').textContent = ok ? 'Gemini API — connected ✓' : 'Gemini API Key — click to set';
+}
+
+async function updateKPI() {
+  try {
+    await Excel.run(async ctx => {
+      const sheet = ctx.workbook.worksheets.getActiveWorksheet();
+      const range = sheet.getUsedRange();
+      range.load(['rowCount','columnCount']);
+      await ctx.sync();
+      document.getElementById('kpi-rows').textContent = range.rowCount;
+      document.getElementById('kpi-cols').textContent = range.columnCount;
+    });
+  } catch(e) {}
+}
+
+function usePrompt(p) {
+  document.getElementById('promptInput').value = p;
+  document.getElementById('promptInput').focus();
+}
+
+async function runDivy() {
+  const prompt = document.getElementById('promptInput').value.trim();
+  if (!prompt) { showToast('Kuch likhen pehle!'); return; }
+  if (!geminiKey) { showToast('Pehle API key save karein!'); toggleApi(); return; }
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin"></div> Soch raha hoon...';
+
+  addLog('thinking', '🧠', 'Prompt analyze ho rahi hai: "' + prompt.slice(0,70) + (prompt.length>70?'...':'"'));
+
+  // Get sheet context
+  let sheetCtx = 'Sheet data unavailable.';
+  try {
+    await Excel.run(async ctx => {
+      const sheet = ctx.workbook.worksheets.getActiveWorksheet();
+      sheet.load('name');
+      const sel = ctx.workbook.getSelectedRange();
+      sel.load(['values','rowCount','columnCount','address']);
+      const used = sheet.getUsedRange();
+      used.load(['rowCount','columnCount']);
+      await ctx.sync();
+      sheetCtx = `Sheet name: "${sheet.name}". Used range size: ${used.rowCount} rows x ${used.columnCount} cols. Selected range: ${sel.address} (${sel.rowCount} rows x ${sel.columnCount} cols). First 5 rows of selected data: ${JSON.stringify(sel.values.slice(0,5))}`;
+    });
+  } catch(e) {}
+
+  const sysPrompt = `You are Divy.AI, an expert Excel automation assistant. 
+The user gives you a task in natural language (Hindi/English/Hinglish). 
+You must respond with ONLY executable JavaScript code (no markdown, no backticks, no explanations).
+The code will be wrapped in: (async () => { YOUR_CODE_HERE })()
+So write only the inner body — it can use await freely.
+
+IMPORTANT RULES:
+- Always use: await Excel.run(async (context) => { ... await context.sync(); });
+- For charts: use worksheet.charts.add(Excel.ChartType.ColumnClustered, dataRange, Excel.ChartSeriesBy.auto)
+- For conditional formatting 3-color scale: range.conditionalFormats.add(Excel.ConditionalFormatType.colorScale)
+- For removing duplicates: read values array, filter unique rows by JSON.stringify, write back
+- For cell colors: range.format.fill.color = "#FFFF00"
+- For bold: range.format.font.bold = true
+- For sorting: range.sort.apply([{key:0, ascending:true}])
+- For new sheet: context.workbook.worksheets.add("SheetName")
+- Always end with: return "Done: [brief description of what was done]";
+- Keep code complete and working
+
+Current Excel context:
+${sheetCtx}
+
+User task: ${prompt}`;
+
+  try {
+    addLog('thinking', '⚙️', 'Gemini AI se code generate ho raha hai...');
+    
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: sysPrompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error('Gemini Error: ' + data.error.message);
+
+    let code = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // Strip any markdown fences
+    code = code.replace(/^```[a-z]*\n?/gim, '').replace(/```$/gim, '').trim();
+
+    addLog('thinking', '🚀', 'Code ready, Excel mein execute ho raha hai...');
+
+    // Execute generated code
+    const execFn = new Function('Excel', 'Office', `return (async () => { ${code} })()`);
+    const result = await execFn(Excel, Office);
+
+    tasksDone++;
+    document.getElementById('kpi-tasks').textContent = tasksDone;
+    await updateKPI();
+
+    addLog('success', '✅', result || 'Task successfully complete!');
+    showToast('Divy ne kaam kar diya! ✓');
+
+  } catch(err) {
+    console.error(err);
+    addLog('error', '❌', 'Error: ' + (err.message || 'Unknown error. Log check karein.'));
+    showToast('Error aaya — log dekhein');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Run Divy →';
+}
+
+function addLog(type, icon, text) {
+  const body = document.getElementById('logBody');
+  const div = document.createElement('div');
+  div.className = 'log-entry ' + type;
+  div.innerHTML = `<span class="log-icon">${icon}</span><span>${text}</span>`;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('logBody').innerHTML = '';
+  addLog('info','🗑️','Log clear ho gaya.');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runDivy(); }
+});
+</script>
+</body>
+</html>
